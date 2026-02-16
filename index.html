@@ -29,10 +29,8 @@ a{color:#ff6600;text-decoration:none;}
 <h2>GlitzSurvivor Store</h2>
 </header>
 
-<!-- Floating Menu Button -->
 <button id="menuBtn" onclick="toggleMenu()">☰ Menu</button>
 
-<!-- Bottom Slide Menu -->
 <div id="bottomMenu">
 <button onclick="showSection('store')">Store</button>
 <button onclick="showSection('cart')">Cart (<span id="cartCount">0</span>)</button>
@@ -40,7 +38,6 @@ a{color:#ff6600;text-decoration:none;}
 <button onclick="logout()">Logout</button>
 </div>
 
-<!-- LOGIN & REGISTER -->
 <div id="login" class="center">
 <div class="box">
 <h3>Login</h3>
@@ -61,13 +58,11 @@ a{color:#ff6600;text-decoration:none;}
 </div>
 </div>
 
-<!-- STORE -->
 <div id="store" class="section">
 <h3>Products</h3>
 <div class="products" id="productList"></div>
 </div>
 
-<!-- CART -->
 <div id="cart" class="section">
 <h3>Your Cart</h3>
 <div id="cartItems"></div>
@@ -75,7 +70,6 @@ a{color:#ff6600;text-decoration:none;}
 <button class="green" onclick="checkoutWhatsApp()">Checkout via WhatsApp</button>
 </div>
 
-<!-- ADMIN -->
 <div id="admin" class="section">
 <h3>Admin Panel</h3>
 <input type="text" id="pname" placeholder="Product Name"><br>
@@ -89,7 +83,6 @@ a{color:#ff6600;text-decoration:none;}
 </div>
 
 <script>
-// --- FLOATING MENU ---
 let menuOpen=false;
 function toggleMenu(){
   let menu=document.getElementById("bottomMenu");
@@ -97,12 +90,10 @@ function toggleMenu(){
   menuOpen=!menuOpen;
 }
 
-// --- DATA ---
 let products = JSON.parse(localStorage.getItem("products")) || [];
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 let users = JSON.parse(localStorage.getItem("users")) || [];
 
-// --- REGISTER ---
 function showRegister(){document.getElementById("registerDiv").style.display="block";}
 function register(){
 let u=document.getElementById("regUser").value;
@@ -118,7 +109,6 @@ document.getElementById("msg").innerText="Registration Successful! Login now.";
 document.getElementById("registerDiv").style.display="none";
 }
 
-// --- LOGIN ---
 function login(){
 let u=document.getElementById("loginUser").value;
 let p=document.getElementById("loginPass").value;
@@ -128,24 +118,19 @@ if(user){localStorage.setItem("role","customer"); localStorage.setItem("currentU
 else{document.getElementById("msg").innerText="Invalid login!";}
 }
 
-// --- START APP ---
 function startApp(){
 document.getElementById("login").style.display="none";
 if(localStorage.getItem("role")==="customer"){document.getElementById("adminBtn").style.display="none";}
 showSection("store"); displayProducts(); updateCart();
 }
 
-// --- LOGOUT ---
 function logout(){localStorage.removeItem("role"); localStorage.removeItem("currentUser"); location.reload();}
-
-// --- NAVIGATION ---
 function showSection(id){
 document.querySelectorAll(".section").forEach(s=>s.style.display="none");
 if(document.getElementById(id)) document.getElementById(id).style.display="block";
-toggleMenu(); // close menu after clicking
+toggleMenu();
 }
 
-// --- PRODUCTS ---
 function displayProducts(){
 let list = document.getElementById("productList");
 list.innerHTML = "";
@@ -162,7 +147,6 @@ products.forEach((p, i) => {
 localStorage.setItem("products", JSON.stringify(products));
 }
 
-// --- ADD PRODUCT ---
 function addProduct(){
 if(localStorage.getItem("role")!=="admin"){alert("Only Admin!"); return;}
 let name=document.getElementById("pname").value;
@@ -178,7 +162,6 @@ reader.onload = function(e){
 reader.readAsDataURL(file);
 }
 
-// --- DELETE PRODUCT ---
 function deleteProduct(index){
 if(localStorage.getItem("role") !== "admin"){ alert("Only Admin!"); return; }
 if(confirm("Are you sure you want to delete this product?")){
@@ -188,7 +171,6 @@ if(confirm("Are you sure you want to delete this product?")){
 }
 }
 
-// --- CART ---
 function addToCart(i){
 let item=products[i];
 let existing=cart.find(p=>p.name===item.name);
@@ -208,47 +190,25 @@ document.getElementById("cartCount").innerText=cart.length;
 }
 function changeQty(i,change){cart[i].qty+=change; if(cart[i].qty<=0){cart.splice(i,1);} saveCart();}
 
-// --- CHECKOUT VIA WHATSAPP ---
 function checkoutWhatsApp(){
-    if(cart.length===0){alert("Cart is empty!"); return;}
+    if(cart.length===0){alert("Cart is empty!"); return;}
+    let message = "New Order from GlitzSurvivor Store:\n\n";
+    cart.forEach(item=>{
+        message += `${item.name} x ${item.qty} = NPR ${item.price*item.qty}\n`;
+    });
+    let total = cart.reduce((sum,item)=>sum+item.price*item.qty,0);
+    message += `\nTotal: NPR ${total}`;
+    let encodedMessage = encodeURIComponent(message);
+    let yourNumber = "9767797783"; // <-- Replace with your WhatsApp number
+    let whatsappURL = `https://wa.me/${yourNumber}?text=${encodedMessage}`;
+    window.open(whatsappURL, "_blank");
 
-    let total = cart.reduce((sum,item)=>sum + item.price*item.qty, 0);
-
-    // Ask customer for their WhatsApp number
-    let customerNumber = prompt("Enter your WhatsApp number (with country code, e.g., 977981xxxxxxx):");
-    if(!customerNumber){alert("WhatsApp number required!"); return;}
-
-    // --- ADMIN MESSAGE ---
-    let adminMessage = "✅ New Order from GlitzSurvivor Store:\n\n";
-    cart.forEach(item=>{
-        adminMessage += `${item.name} x ${item.qty} = NPR ${item.price*item.qty}\n`;
-    });
-    adminMessage += `\nTotal: NPR ${total}`;
-    adminMessage += `\n\nCustomer WhatsApp: ${customerNumber}`;
-    let encodedAdminMessage = encodeURIComponent(adminMessage);
-
-    let yourNumber = "9767797783"; // <-- Replace with your WhatsApp
-    window.open(`https://wa.me/${yourNumber}?text=${encodedAdminMessage}`, "_blank");
-
-    // --- CUSTOMER MESSAGE ---
-    let customerMessage = "✅ Thank you for your order from GlitzSurvivor Store!\n\n";
-    cart.forEach(item=>{
-        customerMessage += `${item.name} x ${item.qty} = NPR ${item.price*item.qty}\n`;
-    });
-    customerMessage += `\nTotal Amount to Pay: NPR ${total}`;
-    customerMessage += `\n\nPlease pay via eSewa to merchant ID 9815328631 or bank transfer.\nAfter payment, we will confirm your order.`;
-    let encodedCustomerMessage = encodeURIComponent(customerMessage);
-
-    window.open(`https://wa.me/${customerNumber}?text=${encodedCustomerMessage}`, "_blank");
-
-    // Clear cart
-    cart = [];
-    localStorage.removeItem("cart");
-    updateCart();
-    showSection("store");
+    cart = [];
+    localStorage.removeItem("cart");
+    updateCart();
+    showSection("store");
 }
 
-// --- AUTO LOGIN ---
 if(localStorage.getItem("role")){startApp();}
 </script>
 
