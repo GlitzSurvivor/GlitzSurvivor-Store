@@ -1,203 +1,323 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>GlitzSurvivor Store</title>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GlitzSurvivor Store</title>
 <style>
-body{margin:0;font-family:Arial;background:#f2f2f2;}
-header{background:#ff6600;color:white;padding:15px;text-align:center;}
-.section{display:none;padding:20px;}
-.products{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;}
-.card{background:white;padding:15px;border-radius:10px;box-shadow:0 4px 8px rgba(0,0,0,0.1);text-align:center;}
-.card img{width:100%;border-radius:8px;}
-button{padding:7px 12px;border:none;border-radius:5px;cursor:pointer;margin-top:5px;}
-.orange{background:#ff6600;color:white;}
-.green{background:green;color:white;}
-input{padding:8px;margin:5px;width:90%;}
-.cart-item{display:flex;justify-content:space-between;margin-bottom:10px;}
-.center{display:flex;justify-content:center;align-items:center;height:100vh;}
-.box{background:white;padding:25px;border-radius:10px;text-align:center;box-shadow:0 4px 10px rgba(0,0,0,0.2);}
-#menuBtn{position:fixed;right:20px;bottom:20px;background:#ff6600;color:white;border:none;padding:15px;border-radius:50%;font-size:18px;cursor:pointer;}
-#bottomMenu{position:fixed;bottom:-250px;left:0;width:100%;background:white;box-shadow:0 -4px 10px rgba(0,0,0,0.2);transition:0.3s;padding:20px;}
-#bottomMenu button{width:100%;margin:5px 0;}
+/* ------------------ General ------------------ */
+body{margin:0;font-family:'Segoe UI',sans-serif;background:#f5f5f5;}
+header{background:black;color:gold;padding:15px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 3px 10px rgba(0,0,0,0.3);}
+header h1{margin:0;font-size:1.8em;}
+header .buttons button{margin-left:5px;padding:8px 15px;font-weight:bold;border:none;cursor:pointer;border-radius:5px;}
+header .buttons .cart-btn{background:gold;color:black;}
+header .buttons .admin-btn, header .buttons .login-btn, #profile-btn{background:#222;color:gold;}
+footer{text-align:center;padding:15px;background:black;color:gold;margin-top:20px;}
+.products{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:25px;padding:20px;}
+.product{background:white;border-radius:12px;overflow:hidden;position:relative;box-shadow:0 5px 20px rgba(0,0,0,0.1);transition:transform 0.3s, box-shadow 0.3s;}
+.product:hover{transform:translateY(-5px);box-shadow:0 10px 25px rgba(0,0,0,0.2);}
+.product img{width:100%;height:200px;object-fit:cover;transition:transform 0.3s;}
+.product:hover img{transform:scale(1.1);}
+.product-info{padding:15px;text-align:center;}
+.product-info h3{margin:10px 0 5px;color:#222;}
+.product-info p{color:#555;margin:5px 0;font-weight:bold;}
+.product-info button{padding:10px 15px;background:black;color:white;border:none;border-radius:5px;cursor:pointer;transition:0.3s;}
+.product-info button:hover{background:gold;color:black;}
+.cart{position:fixed;right:-100%;top:0;width:350px;height:100%;background:white;box-shadow:-5px 0 20px rgba(0,0,0,0.3);padding:20px;transition:0.3s;overflow-y:auto;z-index:999;border-radius:10px 0 0 10px;}
+.cart.active{right:0;}
+.cart h2{margin-top:0;text-align:center;color:black;}
+.cart-item{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #ddd;padding:8px 0;}
+.cart-item button{background:red;color:white;border:none;padding:3px 6px;cursor:pointer;border-radius:3px;}
+.checkout-btn{width:100%;background:green;color:white;padding:12px;border:none;cursor:pointer;margin-top:10px;border-radius:5px;transition:0.3s;}
+.checkout-btn:hover{background:darkgreen;}
+#overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:999;}
+.modal, .admin-panel{display:none;padding:20px;background:white;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);box-shadow:0 5px 20px rgba(0,0,0,0.3);z-index:1000;border-radius:12px;width:90%;max-width:400px;text-align:center;}
+.modal input, .admin-panel input, .admin-panel button{width:100%;margin:5px 0;padding:8px;border-radius:5px;border:1px solid #ccc;}
+.modal button{margin-top:10px;padding:10px;border:none;border-radius:5px;background:black;color:white;cursor:pointer;transition:0.3s;}
+.modal button:hover{background:gold;color:black;}
+.admin-panel{width:90%;max-width:500px;}
+.admin-panel table{width:100%;border-collapse:collapse;margin-top:10px;}
+.admin-panel th, .admin-panel td{border:1px solid #ccc;padding:5px;text-align:center;}
+.close-btn{position:absolute;top:10px;right:10px;background:red;color:white;border:none;border-radius:50%;width:25px;height:25px;font-weight:bold;cursor:pointer;}
 </style>
 </head>
 <body>
 
-<header><h2>GlitzSurvivor Store</h2></header>
+<header>
+<h1>GlitzSurvivor Store</h1>
+<div class="buttons">
+<button class="cart-btn" onclick="toggleCart()">Cart (<span id="cart-count">0</span>)</button>
+<button class="login-btn" onclick="openLogin()">Login / SignUp</button>
+<button id="profile-btn" onclick="openProfile()" style="display:none;">Profile</button>
+<button class="admin-btn" onclick="openAdmin()">Admin</button>
+</div>
+</header>
 
-<button id="menuBtn" onclick="toggleMenu()">☰</button>
+<section class="products" id="products"></section>
 
-<div id="bottomMenu">
-<button onclick="showSection('store')">Store</button>
-<button onclick="showSection('cart')">Cart (<span id="cartCount">0</span>)</button>
-<button id="adminBtn" onclick="showSection('admin')">Admin</button>
-<button onclick="logout()">Logout</button>
+<div class="cart" id="cart">
+<button class="close-btn" onclick="toggleCart()">X</button>
+<h2>Your Cart</h2>
+<div id="cart-items"></div>
+<h3>Total: Rs <span id="total">0</span></h3>
+<button class="checkout-btn" onclick="showCheckout()">Checkout</button>
 </div>
 
-<!-- LOGIN -->
-<div id="login" class="center">
-<div class="box">
-<h3>Login</h3>
-<input type="text" id="loginUser" placeholder="Username"><br>
-<input type="password" id="loginPass" placeholder="Password"><br>
-<button class="orange" onclick="login()">Login</button>
-<p id="msg"></p>
-</div>
+<div id="overlay"></div>
+
+<!-- Checkout Modal -->
+<div class="modal" id="checkout-form">
+<button class="close-btn" onclick="closeCheckout()">X</button>
+<h2>Checkout</h2>
+<input type="text" id="customer-name" placeholder="Full Name" required>
+<input type="text" id="customer-address" placeholder="Address" required>
+<input type="tel" id="customer-phone" placeholder="Phone Number" required>
+<form id="esewa-form" target="_blank" method="POST" style="display:none;">
+<input type="hidden" name="amt" id="esewa-amt">
+<input type="hidden" name="pdc" value="0">
+<input type="hidden" name="psc" value="0">
+<input type="hidden" name="txAmt" value="0">
+<input type="hidden" name="tAmt" id="esewa-total">
+<input type="hidden" name="pid" id="esewa-pid">
+<input type="hidden" name="scd" value="YOUR_MERCHANT_ID">
+<input type="hidden" name="su" id="esewa-su">
+<input type="hidden" name="fu" value="YOUR_FAILURE_URL">
+</form>
+<button onclick="payViaESewa()">Pay via eSewa</button>
+<button onclick="placeOrder()">Order via WhatsApp</button>
 </div>
 
-<!-- STORE -->
-<div id="store" class="section">
+<!-- Customer Login / Signup Modal -->
+<div class="modal" id="login-modal">
+<button class="close-btn" onclick="closeLogin()">X</button>
+<h2>Customer Login / SignUp</h2>
+<input type="email" id="login-email" placeholder="Email" required>
+<input type="password" id="login-password" placeholder="Password" required>
+<button onclick="loginCustomer()">Login</button>
+<button onclick="signupCustomer()">Sign Up</button>
+</div>
+
+<!-- Admin Panel -->
+<div class="admin-panel" id="admin-panel">
+<button class="close-btn" onclick="closeAdmin()">X</button>
+<h2>Admin Panel</h2>
+<input type="password" id="admin-pass" placeholder="Enter password">
+<button onclick="adminLogin()">Login</button>
+<div id="admin-content" style="display:none;">
+<h3>Add Product</h3>
+<input type="text" id="prod-name" placeholder="Product Name">
+<input type="number" id="prod-price" placeholder="Price">
+<input type="file" id="prod-img-file" accept="image/*">
+<button onclick="addProduct()">Add Product</button>
 <h3>Products</h3>
-<div class="products" id="productList"></div>
+<table id="prod-table"><tr><th>Name</th><th>Price</th><th>Image</th><th>Action</th></tr></table>
+<h3>Orders</h3>
+<table id="orders-table"><tr><th>Order</th><th>Total</th><th>Customer</th><th>WhatsApp</th></tr></table>
+</div>
 </div>
 
-<!-- CART -->
-<div id="cart" class="section">
-<h3>Your Cart</h3>
-<div id="cartItems"></div>
-<h3>Total: NPR <span id="totalPrice">0</span></h3>
-<button class="green" onclick="checkoutWhatsApp()">Checkout via WhatsApp</button>
-</div>
-
-<!-- ADMIN -->
-<div id="admin" class="section">
-<h3>Admin Panel</h3>
-<input type="text" id="pname" placeholder="Product Name"><br>
-<input type="number" id="pprice" placeholder="Price"><br>
-<input type="file" id="pimagefile" accept="image/*"><br>
-<button class="orange" onclick="addProduct()">Add Product</button>
-</div>
+<footer>© 2026 GlitzSurvivor Store</footer>
 
 <script>
+// ------------------ Products ------------------
+let products = JSON.parse(localStorage.getItem("products")) || [];
+function renderProducts(){
+let container = document.getElementById("products"); container.innerHTML="";
+products.forEach(p=>{
+container.innerHTML += `<div class="product">
+<img src="${p.img}">
+<div class="product-info">
+<h3>${p.name}</h3>
+<p>Rs ${p.price}</p>
+<button onclick="addToCart('${p.name}',${p.price})">Add to Cart</button>
+</div></div>`;
+});}
+renderProducts();
 
-let menuOpen=false;
-function toggleMenu(){
-let menu=document.getElementById("bottomMenu");
-menu.style.bottom = menuOpen ? "-250px" : "0";
-menuOpen=!menuOpen;
+// ------------------ Cart ------------------
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+function toggleCart(){document.getElementById("cart").classList.toggle("active");}
+function addToCart(name, price){
+let item = cart.find(i=>i.name===name); if(item){item.quantity++;} else {cart.push({name,price,quantity:1});}
+saveCart(); updateCart();
+}
+function removeItem(name){cart = cart.filter(i=>i.name!==name); saveCart(); updateCart();}
+function saveCart(){localStorage.setItem("cart",JSON.stringify(cart));}
+function updateCart(){
+let cartItems = document.getElementById("cart-items"); cartItems.innerHTML="";
+let total=0,count=0;
+cart.forEach(i=>{total+=i.price*i.quantity; count+=i.quantity;
+cartItems.innerHTML += `<div class="cart-item">${i.name} x${i.quantity} - Rs ${i.price*i.quantity} <button onclick="removeItem('${i.name}')">X</button></div>`;});
+document.getElementById("total").innerText=total;
+document.getElementById("cart-count").innerText=count;
+}
+updateCart();
+
+// ------------------ Customer Login ------------------
+function openLogin(){document.getElementById("overlay").style.display="block"; document.getElementById("login-modal").style.display="block";}
+function closeLogin(){document.getElementById("overlay").style.display="none"; document.getElementById("login-modal").style.display="none";}
+function signupCustomer(){
+let email=document.getElementById("login-email").value;
+let password=document.getElementById("login-password").value;
+if(!email||!password){alert("Fill all fields"); return;}
+let users = JSON.parse(localStorage.getItem("customers"))||[];
+if(users.find(u=>u.email===email)){alert("Email already registered"); return;}
+let newUser = {email,password,orders:[]};
+users.push(newUser);
+localStorage.setItem("customers",JSON.stringify(users));
+localStorage.setItem("currentCustomer",JSON.stringify(newUser));
+alert("SignUp successful!");
+closeLogin();
+document.getElementById("profile-btn").style.display="inline-block";
+}
+function loginCustomer(){
+let email=document.getElementById("login-email").value;
+let password=document.getElementById("login-password").value;
+let users = JSON.parse(localStorage.getItem("customers"))||[];
+let user = users.find(u=>u.email===email && u.password===password);
+if(user){alert("Login successful!"); closeLogin(); 
+localStorage.setItem("currentCustomer",JSON.stringify(user));
+document.getElementById("profile-btn").style.display="inline-block";
+}
+else{alert("Wrong email or password");}
 }
 
-let products=[];
-let cart=[];
-
-function login(){
-let u=document.getElementById("loginUser").value;
-let p=document.getElementById("loginPass").value;
-
-if(u==="Nicolus" && p==="nicolus098@"){
-localStorage.setItem("role","admin");
-startApp();
-}else{
-document.getElementById("msg").innerText="Wrong Username or Password";
-}
-}
-
-function startApp(){
-document.getElementById("login").style.display="none";
-showSection("store");
-}
-
-function logout(){
-localStorage.clear();
-location.reload();
-}
-
-function showSection(id){
-document.querySelectorAll(".section").forEach(s=>s.style.display="none");
-document.getElementById(id).style.display="block";
-toggleMenu();
-}
-
-function displayProducts(){
-let list=document.getElementById("productList");
-list.innerHTML="";
-products.forEach((p,i)=>{
-list.innerHTML+=`
-<div class="card">
-<img src="${p.image}">
-<h4>${p.name}</h4>
-<p>NPR ${p.price}</p>
-<button class="green" onclick="addToCart(${i})">Add</button>
-<button class="orange" onclick="deleteProduct(${i})">Delete</button>
+// ------------------ Profile ------------------
+function openProfile(){
+  let customer = JSON.parse(localStorage.getItem("currentCustomer"));
+  if(!customer){alert("Please login first"); return;}
+  let profileHTML = `<div class="modal" style="display:block;" id="profile-modal">
+<button class="close-btn" onclick="closeProfile()">X</button>
+<h2>My Profile</h2>
+<p>Email: ${customer.email}</p>
+<input type="text" id="profile-name" placeholder="Full Name" value="${customer.name||''}">
+<input type="text" id="profile-address" placeholder="Address" value="${customer.address||''}">
+<input type="tel" id="profile-phone" placeholder="Phone" value="${customer.phone||''}">
+<h3>Past Orders</h3>
+<div>`;
+if(customer.orders.length===0){profileHTML += `<p>No orders yet.</p>`;} else {
+customer.orders.forEach((o,i)=>{profileHTML += `<p>Order ${i+1} - Total: Rs ${o.total} - ${o.paid?"Paid via eSewa":"Pending"}<br>Items: ${o.items.map(it=>it.name+' x'+it.quantity).join(', ')}</p>`;});}
+profileHTML += `</div>
+<button onclick="saveProfile()">Save</button>
 </div>`;
-});
+document.body.insertAdjacentHTML('beforeend', profileHTML);
+document.getElementById("overlay").style.display="block";
+}
+function closeProfile(){
+  document.getElementById("overlay").style.display="none";
+  let modal = document.getElementById("profile-modal");
+  if(modal) modal.remove();
+}
+function saveProfile(){
+  let customer = JSON.parse(localStorage.getItem("currentCustomer"));
+  customer.name = document.getElementById("profile-name").value;
+  customer.address = document.getElementById("profile-address").value;
+  customer.phone = document.getElementById("profile-phone").value;
+  let users = JSON.parse(localStorage.getItem("customers"));
+  users = users.map(u => u.email===customer.email ? customer : u);
+  localStorage.setItem("customers", JSON.stringify(users));
+  localStorage.setItem("currentCustomer", JSON.stringify(customer));
+  alert("Profile updated successfully!");
+  closeProfile();
 }
 
-function addProduct(){
-if(localStorage.getItem("role")!=="admin"){alert("Only Admin");return;}
-let name=pname.value;
-let price=pprice.value;
-let file=pimagefile.files[0];
-if(!name||!price||!file){alert("Fill all fields");return;}
+// ------------------ Checkout & WhatsApp ------------------
+function showCheckout(){document.getElementById("overlay").style.display="block"; document.getElementById("checkout-form").style.display="block";}
+function closeCheckout(){document.getElementById("overlay").style.display="none"; document.getElementById("checkout-form").style.display="none";}
+function placeOrder(){
+let name=document.getElementById("customer-name").value;
+let address=document.getElementById("customer-address").value;
+let phone=document.getElementById("customer-phone").value;
+if(!name||!address||!phone){alert("Fill all fields"); return;}
+let message="✅ New Order from GlitzSurvivor Store%0A";
+cart.forEach(item=>{message+=`${item.name} x${item.quantity} = Rs ${item.price*item.quantity}%0A`;});
+message+=`%0ATotal: Rs ${document.getElementById("total").innerText}%0AName: ${name}%0AAddress: ${address}%0APhone: ${phone}`;
+window.open(`https://wa.me/9815328631?text=${message}`);
+saveCustomerOrder({items:cart,total:document.getElementById("total").innerText,name,phone});
+cart=[]; saveCart(); updateCart(); closeCheckout(); alert("Order sent to WhatsApp!");
+}
+function saveCustomerOrder(order){
+let customer = JSON.parse(localStorage.getItem("currentCustomer"));
+if(customer){
+customer.orders.push(order);
+let users = JSON.parse(localStorage.getItem("customers"));
+users = users.map(u=>u.email===customer.email?customer:u);
+localStorage.setItem("customers",JSON.stringify(users));
+}
+}
 
+// ------------------ Admin Panel ------------------
+function openAdmin(){document.getElementById("overlay").style.display="block"; document.getElementById("admin-panel").style.display="block";}
+function closeAdmin(){document.getElementById("overlay").style.display="none"; document.getElementById("admin-panel").style.display="none";}
+const adminPassword="glitz123";
+function adminLogin(){
+let pass=document.getElementById("admin-pass").value;
+if(pass===adminPassword){document.getElementById("admin-content").style.display="block"; renderAdminProducts(); renderOrders();}
+else{alert("Wrong password");}
+}
+function addProduct(){
+let name=document.getElementById("prod-name").value;
+let price=parseInt(document.getElementById("prod-price").value);
+let file=document.getElementById("prod-img-file").files[0];
+if(!name||!price||!file){alert("Fill all fields"); return;}
 let reader=new FileReader();
 reader.onload=function(e){
-products.push({name,price:Number(price),image:e.target.result});
-displayProducts();
-}
+products.push({name,price,img:e.target.result});
+localStorage.setItem("products",JSON.stringify(products));
+renderProducts(); renderAdminProducts();
+};
 reader.readAsDataURL(file);
 }
-
-function deleteProduct(i){
-products.splice(i,1);
-displayProducts();
+function renderAdminProducts(){
+let table=document.getElementById("prod-table"); table.innerHTML='<tr><th>Name</th><th>Price</th><th>Image</th><th>Action</th></tr>';
+products.forEach((p,i)=>{table.innerHTML+=`<tr><td>${p.name}</td><td>${p.price}</td><td><img src="${p.img}" width="50"></td><td><button onclick="deleteProduct(${i})">Delete</button></td></tr>`;});}
+function deleteProduct(i){products.splice(i,1); localStorage.setItem("products",JSON.stringify(products)); renderProducts(); renderAdminProducts();}
+function renderOrders(){
+let table=document.getElementById("orders-table"); let orders=JSON.parse(localStorage.getItem("orders"))||[];
+table.innerHTML='<tr><th>Order</th><th>Total</th><th>Customer</th><th>WhatsApp</th></tr>';
+orders.forEach(o=>{table.innerHTML+=`<tr><td>${o.items.map(it=>it.name+'x'+it.quantity).join(', ')}</td><td>${o.total}</td><td>${o.name}</td><td><a href="https://wa.me/977${o.phone}?text=New%20order" target="_blank">WhatsApp</a></td></tr>`;});
 }
 
-function addToCart(i){
-let item=products[i];
-let exist=cart.find(x=>x.name===item.name);
-if(exist){exist.qty++;}
-else{cart.push({...item,qty:1});}
-updateCart();
-}
+// ------------------ Live eSewa Payment & Auto WhatsApp ------------------
+window.addEventListener("load", function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const success = urlParams.get("success");
+  const orderId = urlParams.get("orderId");
 
-function updateCart(){
-let cartDiv=document.getElementById("cartItems");
-let totalAmount=0;
-cartDiv.innerHTML="";
-
-cart.forEach((item,i)=>{
-totalAmount+=item.price*item.qty;
-cartDiv.innerHTML+=`
-<div class="cart-item">
-${item.name} x ${item.qty}
-<div>
-<button onclick="changeQty(${i},1)">+</button>
-<button onclick="changeQty(${i},-1)">-</button>
-</div>
-</div>`;
+  if(success === "1" && orderId){
+    let customer = JSON.parse(localStorage.getItem("currentCustomer"));
+    if(!customer){alert("Login required to process order."); return;}
+    let cartBackup = JSON.parse(localStorage.getItem("cartBackup")) || [];
+    if(cartBackup.length === 0){alert("No items found for order."); return;}
+    let total = cartBackup.reduce((sum,i)=>sum+i.price*i.quantity,0);
+    let message = `✅ New Order from GlitzSurvivor Store (Paid via eSewa)%0A`;
+    cartBackup.forEach(item=>{message+=`${item.name} x${item.quantity} = Rs ${item.price*item.quantity}%0A`;});
+    message += `%0ATotal: Rs ${total}%0AName: ${customer.email}%0APhone: ${customer.phone||"N/A"}`;
+    window.open(`https://wa.me/9815328631?text=${message}`,'_blank');
+    customer.orders.push({items: cartBackup, total, paid:true});
+    let users = JSON.parse(localStorage.getItem("customers")) || [];
+    users = users.map(u => u.email === customer.email ? customer : u);
+    localStorage.setItem("customers", JSON.stringify(users));
+    localStorage.setItem("cart", JSON.stringify([]));
+    localStorage.setItem("cartBackup", JSON.stringify([]));
+    updateCart();
+    alert("Order completed and sent to WhatsApp automatically!");
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
 });
 
-document.getElementById("totalPrice").innerText=totalAmount;
-document.getElementById("cartCount").innerText=cart.length;
+function payViaESewa(){
+  let customer = JSON.parse(localStorage.getItem("currentCustomer"));
+  if(!customer){alert("Please login first"); return;}
+  let amount = document.getElementById("total").innerText;
+  let orderId = "ORD" + Date.now();
+  localStorage.setItem("cartBackup", JSON.stringify(cart));
+  document.getElementById("esewa-amt").value = amount;
+  document.getElementById("esewa-total").value = amount;
+  document.getElementById("esewa-pid").value = orderId;
+  document.getElementById("esewa-su").value = window.location.href + "?success=1&orderId=" + orderId;
+  document.getElementById("esewa-form").submit();
 }
-
-function changeQty(i,c){
-cart[i].qty+=c;
-if(cart[i].qty<=0) cart.splice(i,1);
-updateCart();
-}
-
-function checkoutWhatsApp(){
-if(cart.length===0){alert("Cart empty");return;}
-
-let message="New Order:%0A%0A";
-cart.forEach(item=>{
-message+=`${item.name} x ${item.qty} = NPR ${item.price*item.qty}%0A`;
-});
-
-let totalAmount=cart.reduce((a,b)=>a+b.price*b.qty,0);
-message+=`%0ATotal: NPR ${totalAmount}`;
-
-window.open(`https://wa.me/9767797783?text=${message}`,"_blank");
-
-cart=[];
-updateCart();
-showSection("store");
-}
-
 </script>
-
 </body>
 </html>
