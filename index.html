@@ -38,6 +38,7 @@ a{color:#ff6600;text-decoration:none;}
 <button onclick="logout()">Logout</button>
 </div>
 
+<!-- LOGIN -->
 <div id="login" class="center">
 <div class="box">
 <h3>Login</h3>
@@ -47,22 +48,23 @@ a{color:#ff6600;text-decoration:none;}
 <p>Don't have an account? <a href="#" onclick="showRegister()">Register Here</a></p>
 
 <div id="registerDiv" style="display:none;margin-top:20px;">
-<h3>Register (Customer)</h3>
-<input type="text" id="regUser" placeholder="Choose Username"><br>
-<input type="password" id="regPass" placeholder="Choose Password"><br>
+<h3>Register</h3>
+<input type="text" id="regUser" placeholder="Username"><br>
+<input type="password" id="regPass" placeholder="Password"><br>
 <input type="password" id="regConfirm" placeholder="Confirm Password"><br>
 <button class="green" onclick="register()">Register</button>
 </div>
-
 <p id="msg"></p>
 </div>
 </div>
 
+<!-- STORE -->
 <div id="store" class="section">
 <h3>Products</h3>
 <div class="products" id="productList"></div>
 </div>
 
+<!-- CART -->
 <div id="cart" class="section">
 <h3>Your Cart</h3>
 <div id="cartItems"></div>
@@ -70,6 +72,7 @@ a{color:#ff6600;text-decoration:none;}
 <button class="green" onclick="checkoutWhatsApp()">Checkout via WhatsApp</button>
 </div>
 
+<!-- ADMIN -->
 <div id="admin" class="section">
 <h3>Admin Panel</h3>
 <input type="text" id="pname" placeholder="Product Name"><br>
@@ -78,99 +81,97 @@ a{color:#ff6600;text-decoration:none;}
 <button class="orange" onclick="addProduct()">Add Product</button>
 </div>
 
-<div id="paymentResult" class="section center" style="display:none;">
-<div class="box" id="paymentBox"></div>
-</div>
-
 <script>
+
+// MENU
 let menuOpen=false;
 function toggleMenu(){
-  let menu=document.getElementById("bottomMenu");
-  menu.style.bottom = menuOpen ? "-200px" : "0";
-  menuOpen=!menuOpen;
+let menu=document.getElementById("bottomMenu");
+menu.style.bottom = menuOpen ? "-200px" : "0";
+menuOpen=!menuOpen;
 }
 
+// DATA
 let products = JSON.parse(localStorage.getItem("products")) || [];
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 let users = JSON.parse(localStorage.getItem("users")) || [];
 
+// REGISTER
 function showRegister(){document.getElementById("registerDiv").style.display="block";}
 function register(){
-let u=document.getElementById("regUser").value;
-let p=document.getElementById("regPass").value;
-let c=document.getElementById("regConfirm").value;
-if(u===""||p===""||c===""){document.getElementById("msg").innerText="Fill all fields!"; return;}
-if(p!==c){document.getElementById("msg").innerText="Passwords do not match!"; return;}
-if(users.find(user=>user.username===u)){document.getElementById("msg").innerText="Username exists!"; return;}
-users.push({username:u,password:p,role:"customer"});
+let u=regUser.value,p=regPass.value,c=regConfirm.value;
+if(!u||!p||!c){msg.innerText="Fill all fields!";return;}
+if(p!==c){msg.innerText="Passwords do not match!";return;}
+if(users.find(user=>user.username===u)){msg.innerText="Username exists!";return;}
+users.push({username:u,password:p});
 localStorage.setItem("users",JSON.stringify(users));
-document.getElementById("msg").style.color="green";
-document.getElementById("msg").innerText="Registration Successful! Login now.";
-document.getElementById("registerDiv").style.display="none";
+msg.style.color="green";
+msg.innerText="Registration Successful!";
+registerDiv.style.display="none";
 }
 
+// LOGIN
 function login(){
-let u=document.getElementById("loginUser").value;
-let p=document.getElementById("loginPass").value;
-if(u==="Nicolus" && p==="nicolus098@"){localStorage.setItem("role","admin"); startApp(); return;}
-let user = users.find(user=>user.username===u && user.password===p);
-if(user){localStorage.setItem("role","customer"); localStorage.setItem("currentUser",u); startApp();}
-else{document.getElementById("msg").innerText="Invalid login!";}
+let u=loginUser.value,p=loginPass.value;
+if(u==="Nicolus" && p==="nicolus098@"){localStorage.setItem("role","admin");startApp();return;}
+let user=users.find(user=>user.username===u && user.password===p);
+if(user){localStorage.setItem("role","customer");startApp();}
+else{msg.innerText="Invalid login!";}
 }
 
+// START
 function startApp(){
-document.getElementById("login").style.display="none";
-if(localStorage.getItem("role")==="customer"){document.getElementById("adminBtn").style.display="none";}
-showSection("store"); displayProducts(); updateCart();
+login.style.display="none";
+if(localStorage.getItem("role")==="customer")adminBtn.style.display="none";
+showSection("store");displayProducts();updateCart();
 }
 
-function logout(){localStorage.removeItem("role"); localStorage.removeItem("currentUser"); location.reload();}
+// LOGOUT
+function logout(){localStorage.clear();location.reload();}
+
+// NAV
 function showSection(id){
 document.querySelectorAll(".section").forEach(s=>s.style.display="none");
-if(document.getElementById(id)) document.getElementById(id).style.display="block";
+if(document.getElementById(id))document.getElementById(id).style.display="block";
 toggleMenu();
 }
 
+// PRODUCTS
 function displayProducts(){
-let list = document.getElementById("productList");
-list.innerHTML = "";
-products.forEach((p, i) => {
-    list.innerHTML += `
-    <div class="card">
-        <img src="${p.image}">
-        <h4>${p.name}</h4>
-        <p>NPR ${p.price}</p>
-        <button class="green" onclick="addToCart(${i})">Add to Cart</button>
-        ${localStorage.getItem("role")==="admin" ? `<button class="orange" onclick="deleteProduct(${i})">Delete</button>` : ""}
-    </div>`;
+productList.innerHTML="";
+products.forEach((p,i)=>{
+productList.innerHTML+=`
+<div class="card">
+<img src="${p.image}">
+<h4>${p.name}</h4>
+<p>NPR ${p.price}</p>
+<button class="green" onclick="addToCart(${i})">Add to Cart</button>
+${localStorage.getItem("role")==="admin"?`<button class="orange" onclick="deleteProduct(${i})">Delete</button>`:""}
+</div>`;
 });
-localStorage.setItem("products", JSON.stringify(products));
+localStorage.setItem("products",JSON.stringify(products));
 }
 
+// ADD PRODUCT
 function addProduct(){
-if(localStorage.getItem("role")!=="admin"){alert("Only Admin!"); return;}
-let name=document.getElementById("pname").value;
-let price=document.getElementById("pprice").value;
-let file=document.getElementById("pimagefile").files[0];
-if(!name || !price || !file){alert("Fill all fields & select an image!"); return;}
-let reader = new FileReader();
-reader.onload = function(e){
-    products.push({name,price:Number(price),image:e.target.result});
-    displayProducts();
-    alert("Product Added!");
+if(localStorage.getItem("role")!=="admin"){alert("Only Admin!");return;}
+let name=pname.value,price=pprice.value,file=pimagefile.files[0];
+if(!name||!price||!file){alert("Fill all fields!");return;}
+let reader=new FileReader();
+reader.onload=function(e){
+products.push({name,price:Number(price),image:e.target.result});
+displayProducts();
 };
 reader.readAsDataURL(file);
 }
 
-function deleteProduct(index){
-if(localStorage.getItem("role") !== "admin"){ alert("Only Admin!"); return; }
-if(confirm("Are you sure you want to delete this product?")){
-    products.splice(index,1);
-    localStorage.setItem("products",JSON.stringify(products));
-    displayProducts();
-}
+// DELETE
+function deleteProduct(i){
+products.splice(i,1);
+displayProducts();
 }
 
+// CART
 function addToCart(i){
 let item=products[i];
 let existing=cart.find(p=>p.name===item.name);
@@ -178,38 +179,50 @@ if(existing){existing.qty++;}
 else{cart.push({...item,qty:1});}
 saveCart();
 }
-function saveCart(){localStorage.setItem("cart",JSON.stringify(cart)); updateCart();}
+function saveCart(){localStorage.setItem("cart",JSON.stringify(cart));updateCart();}
 function updateCart(){
-let div=document.getElementById("cartItems"); div.innerHTML=""; let total=0;
+cartItems.innerHTML="";
+let total=0;
 cart.forEach((item,i)=>{
 total+=item.price*item.qty;
-div.innerHTML+=`<div class="cart-item">${item.name} x ${item.qty}<div><button onclick="changeQty(${i},1)">+</button> <button onclick="changeQty(${i},-1)">-</button></div></div>`;
+cartItems.innerHTML+=`<div class="cart-item">${item.name} x ${item.qty}</div>`;
 });
-document.getElementById("total").innerText=total;
-document.getElementById("cartCount").innerText=cart.length;
+totalSpan=document.getElementById("total");
+totalSpan.innerText=total;
+cartCount.innerText=cart.length;
 }
-function changeQty(i,change){cart[i].qty+=change; if(cart[i].qty<=0){cart.splice(i,1);} saveCart();}
 
+// WHATSAPP CHECKOUT
 function checkoutWhatsApp(){
-    if(cart.length===0){alert("Cart is empty!"); return;}
-    let message = "New Order from GlitzSurvivor Store:\n\n";
-    cart.forEach(item=>{
-        message += `${item.name} x ${item.qty} = NPR ${item.price*item.qty}\n`;
-    });
-    let total = cart.reduce((sum,item)=>sum+item.price*item.qty,0);
-    message += `\nTotal: NPR ${total}`;
-    let encodedMessage = encodeURIComponent(message);
-    let yourNumber = "9815328631"; // <-- Replace with your WhatsApp number
-    let whatsappURL = `https://wa.me/${yourNumber}?text=${encodedMessage}`;
-    window.open(whatsappURL, "_blank");
+if(cart.length===0){alert("Cart is empty!");return;}
 
-    cart = [];
-    localStorage.removeItem("cart");
-    updateCart();
-    showSection("store");
+let total=cart.reduce((sum,item)=>sum+item.price*item.qty,0);
+let customerNumber=prompt("Enter your WhatsApp number with country code (977XXXXXXXXXX):");
+if(!customerNumber)return;
+
+let adminMessage="🛒 New Order - GlitzSurvivor Store\n\n";
+cart.forEach(item=>{
+adminMessage+=`${item.name} x ${item.qty} = NPR ${item.price*item.qty}\n`;
+});
+adminMessage+=`\nTotal: NPR ${total}\nCustomer: ${customerNumber}`;
+window.open(`https://wa.me/9767797783?text=${encodeURIComponent(adminMessage)}`,"_blank");
+
+let customerMessage="Thank you for your order!\n\n";
+cart.forEach(item=>{
+customerMessage+=`${item.name} x ${item.qty} = NPR ${item.price*item.qty}\n`;
+});
+customerMessage+=`\nTotal Amount: NPR ${total}\n\nWe will contact you shortly for payment details.`;
+window.open(`https://wa.me/${customerNumber}?text=${encodeURIComponent(customerMessage)}`,"_blank");
+
+cart=[];
+localStorage.removeItem("cart");
+updateCart();
+showSection("store");
 }
 
-if(localStorage.getItem("role")){startApp();}
+// AUTO LOGIN
+if(localStorage.getItem("role"))startApp();
+
 </script>
 
 </body>
