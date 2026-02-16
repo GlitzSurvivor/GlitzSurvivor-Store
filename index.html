@@ -199,7 +199,7 @@ function checkoutWhatsApp(){
     let total = cart.reduce((sum,item)=>sum+item.price*item.qty,0);
     message += `\nTotal: NPR ${total}`;
     let encodedMessage = encodeURIComponent(message);
-    let yourNumber = "9767797783"; // <-- Replace with your WhatsApp number
+    let yourNumber = "9815328631"; // <-- Replace with your WhatsApp number
     let whatsappURL = `https://wa.me/${yourNumber}?text=${encodedMessage}`;
     window.open(whatsappURL, "_blank");
 
