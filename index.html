@@ -73,7 +73,8 @@ a{color:#ff6600;text-decoration:none;}
 <h3>Your Cart</h3>
 <div id="cartItems"></div>
 <h3>Total: NPR <span id="total">0</span></h3>
-<button class="green" onclick="checkout()">Checkout via WhatsApp</button>
+<button class="green" onclick="checkoutWhatsApp()">Checkout via WhatsApp</button>
+<button class="orange" onclick="checkoutEsewa()">Pay via eSewa</button>
 </div>
 
 <!-- ADMIN -->
@@ -83,6 +84,11 @@ a{color:#ff6600;text-decoration:none;}
 <input type="number" id="pprice" placeholder="Price"><br>
 <input type="file" id="pimagefile" accept="image/*"><br>
 <button class="orange" onclick="addProduct()">Add Product</button>
+</div>
+
+<!-- SUCCESS / FAIL MODALS -->
+<div id="paymentResult" class="section center" style="display:none;">
+<div class="box" id="paymentBox"></div>
 </div>
 
 <script>
@@ -138,7 +144,7 @@ function logout(){localStorage.removeItem("role"); localStorage.removeItem("curr
 // --- NAVIGATION ---
 function showSection(id){
 document.querySelectorAll(".section").forEach(s=>s.style.display="none");
-document.getElementById(id).style.display="block";
+if(document.getElementById(id)) document.getElementById(id).style.display="block";
 toggleMenu(); // close menu after clicking
 }
 
@@ -206,30 +212,120 @@ document.getElementById("cartCount").innerText=cart.length;
 function changeQty(i,change){cart[i].qty+=change; if(cart[i].qty<=0){cart.splice(i,1);} saveCart();}
 
 // --- CHECKOUT VIA WHATSAPP ---
-function checkout(){
-if(cart.length===0){alert("Cart is empty!"); return;}
-let message = "New Order from eCommerce:\n\n";
-cart.forEach(item=>{
-    message += `${item.name} x ${item.qty} = NPR ${item.price*item.qty}\n`;
-});
-let total = cart.reduce((sum,item)=>sum+item.price*item.qty,0);
-message += `\nTotal: NPR ${total}`;
-let encodedMessage = encodeURIComponent(message);
-let yourNumber = "9767797783"; // <-- Replace with your WhatsApp number
-let whatsappURL = `https://wa.me/${yourNumber}?text=${encodedMessage}`;
-window.open(whatsappURL, "_blank");
+function checkoutWhatsApp(){
+    if(cart.length===0){alert("Cart is empty!"); return;}
+    let message = "New Order from GlitzSurvivor Store:\n\n";
+    cart.forEach(item=>{
+        message += `${item.name} x ${item.qty} = NPR ${item.price*item.qty}\n`;
+    });
+    let total = cart.reduce((sum,item)=>sum+item.price*item.qty,0);
+    message += `\nTotal: NPR ${total}`;
+    let encodedMessage = encodeURIComponent(message);
+    let yourNumber = "9767797783"; // <-- Replace with your WhatsApp number
+    let whatsappURL = `https://wa.me/${yourNumber}?text=${encodedMessage}`;
+    window.open(whatsappURL, "_blank");
 
-// Clear cart
-cart = [];
-localStorage.removeItem("cart");
-updateCart();
-showSection("store");
+    // Clear cart
+    cart = [];
+    localStorage.removeItem("cart");
+    updateCart();
+    showSection("store");
 }
 
+// --- CHECKOUT VIA eSewa ---
+function checkoutEsewa(){
+    if(cart.length===0){alert("Cart is empty!"); return;}
+    
+    let total = cart.reduce((sum,item)=>sum + item.price*item.qty, 0);
+    localStorage.setItem("lastOrder", JSON.stringify(cart));
+
+    // eSewa parameters
+    let tAmt = total;
+    let amt = total;
+    let txAmt = 0;
+    let psc = 0;
+    let pdc = 0;
+    let scd = "9815328631"; // Replace with your merchant ID
+    let pid = "ORDER" + new Date().getTime();
+    let su = window.location.href.split("#")[0]+"#success"; // hash for success
+    let fu = window.location.href.split("#")[0]+"#fail";    // hash for fail
+
+    let form = document.createElement("form");
+    form.method = "POST";
+    form.action = "https://esewa.com.np/epay/main";
+
+    let params = {amt, psc, pdc, tAmt, txAmt, scd, pid, su, fu};
+    for(let key in params){
+        let input = document.createElement("input");
+        input.type = "hidden";
+        input.name = key;
+        input.value = params[key];
+        form.appendChild(input);
+    }
+    document.body.appendChild(form);
+    form.submit();
+
+    // Clear cart locally
+    cart = [];
+    localStorage.removeItem("cart");
+    updateCart();
+    showSection("store");
+}
+
+// --- HANDLE HASH FOR SUCCESS / FAIL ---
+window.addEventListener("load", function(){
+    if(location.hash === "#success"){
+        showPaymentSuccess();
+    } else if(location.hash === "#fail"){
+        showPaymentFail();
+    }
+});
+
+function showPaymentSuccess(){
+    let box = document.getElementById("paymentBox");
+    box.innerHTML = "<h2>Payment Successful!</h2><p>Order Summary:</p>";
+    let order = JSON.parse(localStorage.getItem("lastOrder")) || [];
+    let total = 0;
+    order.forEach(item=>{
+        let lineTotal = item.price*item.qty;
+        total += lineTotal;
+        box.innerHTML += `<p>${item.name} x ${item.qty} = NPR ${lineTotal}</p>`;
+    });
+    box.innerHTML += `<h3>Total: NPR ${total}</h3>`;
+
+    // WhatsApp message to admin
+    if(order.length > 0){
+        let message = "✅ New Order from GlitzSurvivor Store (eSewa Payment):\n\n";
+        order.forEach(item=>{
+            message += `${item.name} x ${item.qty} = NPR ${item.price*item.qty}\n`;
+        });
+        message += `\nTotal: NPR ${total}`;
+        let encodedMessage = encodeURIComponent(message);
+        let adminNumber = "9767797783"; // Replace with your WhatsApp number
+        window.open(`https://wa.me/${adminNumber}?text=${encodedMessage}`, "_blank");
+        localStorage.removeItem("lastOrder");
+    }
+
+    document.getElementById("paymentResult").style.display="flex";
+}
+
+function showPaymentFail(){
+    let box = document.getElementById("paymentBox");
+    box.innerHTML = `<h2>❌ Payment Failed!</h2>
+    <p>Something went wrong with your eSewa payment.</p>
+    <p>You can retry the payment from your cart.</p>
+    <button onclick="retryPayment()">Go Back to Cart</button>`;
+    document.getElementById("paymentResult").style.display="flex";
+}
+
+function retryPayment(){
+    location.hash = "";
+    showSection("cart");
+}
+  
 // --- AUTO LOGIN ---
 if(localStorage.getItem("role")){startApp();}
 </script>
 
 </body>
 </html>
-
